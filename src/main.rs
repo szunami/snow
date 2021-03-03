@@ -9,7 +9,8 @@ use bevy::{
     tasks::{ComputeTaskPool, ParallelIterator},
     window::WindowResized,
 };
-use rand::Rng;
+use rand::{Rng, prelude::ThreadRng};
+use web_sys::console;
 
 fn main() {
     let mut app = App::build();
@@ -29,6 +30,23 @@ fn main() {
 
 struct Snow;
 struct Velocity(Vec2);
+
+pub struct Timer<'a> {
+    name: &'a str,
+}
+
+impl<'a> Timer<'a> {
+    pub fn new(name: &'a str) -> Timer<'a> {
+        console::time_with_label(name);
+        Timer { name }
+    }
+}
+
+impl<'a> Drop for Timer<'a> {
+    fn drop(&mut self) {
+        console::time_end_with_label(self.name);
+    }
+}
 
 fn setup(
     commands: &mut Commands,
@@ -58,7 +76,7 @@ fn setup(
                 ..Default::default()
             })
             .with(Snow)
-            .with(Velocity(randomish_velocity()));
+            .with(Velocity(randomish_velocity(&mut rng)));
     }
 }
 
@@ -68,8 +86,7 @@ fn framerate(diagnostics: Res<Diagnostics>) {
     }
 }
 
-fn randomish_velocity() -> Vec2 {
-    let mut rng = rand::thread_rng();
+fn randomish_velocity(rng: &mut ThreadRng) -> Vec2 {
 
     let x = rng.gen_range(-0.5..0.5);
     let y = rng.gen_range(-1.0..0.0);
@@ -77,14 +94,16 @@ fn randomish_velocity() -> Vec2 {
     Vec2::new(x, y).normalize()
 }
 
-fn snow_velocity(pool: Res<ComputeTaskPool>, mut snow: Query<(&Snow, &mut Velocity)>) {
-    // for (_snow, mut velocity) in
+fn snow_velocity(mut snow: Query<(&Snow, &mut Velocity)>) {
+    let _timer = Timer::new("snow_velocity");
 
-    snow.par_iter_mut(8)
-        .for_each(&pool, |(_snow, mut velocity)| {
-            let new_velocity = randomish_velocity();
-            *velocity = Velocity(velocity.0 + new_velocity);
-        });
+    let mut rng = rand::thread_rng();
+
+
+    for (_snow, mut velocity) in snow.iter_mut() {
+        let new_velocity = randomish_velocity(&mut rng);
+        *velocity = Velocity(velocity.0 + new_velocity);
+    }
 }
 
 fn update_position(
@@ -92,7 +111,11 @@ fn update_position(
     mut q: Query<(&mut Velocity, &mut Transform)>,
     windows: Res<Windows>,
 ) {
+    let _timer = Timer::new("update_position");
+
     let window = windows.get_primary().unwrap();
+    
+    let mut rng = rand::thread_rng();
 
     for (mut velocity, mut transform) in q.iter_mut() {
         *transform = Transform::from_translation(
@@ -101,17 +124,17 @@ fn update_position(
 
         if transform.translation.y < -window.height() / 2.0 {
             transform.translation.y += window.height();
-            *velocity = Velocity(randomish_velocity());
+            *velocity = Velocity(randomish_velocity(&mut rng));
         }
 
         if transform.translation.x > window.width() / 2.0 {
             transform.translation.x -= window.width();
-            *velocity = Velocity(randomish_velocity());
+            *velocity = Velocity(randomish_velocity(&mut rng));
         }
 
         if transform.translation.x < -window.width() / 2.0 {
             transform.translation.x += window.width();
-            *velocity = Velocity(randomish_velocity());
+            *velocity = Velocity(randomish_velocity(&mut rng));
         }
     }
 }
