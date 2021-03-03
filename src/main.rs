@@ -9,22 +9,23 @@ use bevy::{
 use rand::Rng;
 
 fn main() {
-    App::build()
-        .add_plugins(DefaultPlugins)
-        .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
-        .add_startup_system(setup.system())
-        .add_system(framerate.system())
-        .add_system(bevy::input::system::exit_on_esc_system.system())
-        .add_system(snow_velcity.system())
-        .add_system(update_position.system())
-        .run();
+    let mut app = App::build();
+    app.add_plugins(DefaultPlugins);
+        // .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
+        app.add_startup_system(setup.system())
+        // .add_system(framerate.system())
+        // .add_system(bevy::input::system::exit_on_esc_system.system())
+        .add_system(snow_velocity.system())
+        .add_system(update_position.system());
+
+    #[cfg(target_arch = "wasm32")]
+    app.add_plugin(bevy_webgl2::WebGL2Plugin);
+
+    app.run();
 }
 
 struct Snow;
 struct Velocity(Vec2);
-
-// const WINDOW_WIDTH: f32 = 1280.;
-const WINDOW_HEIGHT: f32 = 720.;
 
 fn setup(
     commands: &mut Commands,
@@ -60,7 +61,7 @@ fn setup(
 
 fn framerate(diagnostics: Res<Diagnostics>) {
     if let Some(fps) = diagnostics.get(bevy::diagnostic::FrameTimeDiagnosticsPlugin::FPS) {
-        // dbg!(fps.average());
+        dbg!(fps.average());
     }
 }
 
@@ -73,7 +74,7 @@ fn randomish_velocity() -> Vec2 {
     Vec2::new(x, y).normalize()
 }
 
-fn snow_velcity(pool: Res<ComputeTaskPool>, mut snow: Query<(&Snow, &mut Velocity)>) {
+fn snow_velocity(pool: Res<ComputeTaskPool>, mut snow: Query<(&Snow, &mut Velocity)>) {
     // for (_snow, mut velocity) in
 
     snow.par_iter_mut(8)
@@ -95,8 +96,8 @@ fn update_position(
             transform.translation + time.delta_seconds() * velocity.0.extend(0.0),
         );
 
-        if transform.translation.y < -WINDOW_HEIGHT / 2.0 {
-            transform.translation.y += WINDOW_HEIGHT;
+        if transform.translation.y < -window.height() / 2.0 {
+            transform.translation.y += window.height();
             *velocity = Velocity(randomish_velocity());
         }
 
