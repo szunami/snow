@@ -9,6 +9,9 @@ edition = "2018"
 [dependencies]
 bevy = {version="0.4.0", default-features=false}
 bevy_webgl2 = {version="0.4.0", optional=true}
+web-sys = {version="0.3.48", optional=true}
+wasm-bindgen = {version="0.2.63", optional=true}
+
 rand = "0.8.3"
 getrandom = {version="0.1", features=["wasm-bindgen"]}
 
@@ -25,8 +28,13 @@ native = [
 ]
 
 web = [
-  "bevy_webgl2"
+  "bevy_webgl2",
+  "web-sys",
+  "wasm-bindgen"
 ]
 
 [profile.dev]
 opt-level = 1
+
+[profile.release]
+debug = true

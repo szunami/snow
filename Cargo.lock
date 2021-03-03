@@ -2538,6 +2538,8 @@ dependencies = [
  "bevy_webgl2",
  "getrandom 0.1.16",
  "rand 0.8.3",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]

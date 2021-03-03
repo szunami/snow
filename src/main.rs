@@ -1,4 +1,4 @@
-use std::default;
+use std::{default, fmt::{self, format}};
 
 use bevy::{
     diagnostic::Diagnostics,
@@ -11,9 +11,9 @@ use rand::Rng;
 fn main() {
     let mut app = App::build();
     app.add_plugins(DefaultPlugins);
-        // .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
         app.add_startup_system(setup.system())
-        // .add_system(framerate.system())
+        .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
+        .add_system(framerate.system())
         // .add_system(bevy::input::system::exit_on_esc_system.system())
         .add_system(snow_velocity.system())
         .add_system(update_position.system());
@@ -44,7 +44,7 @@ fn setup(
 
     let window = windows.get_primary().unwrap();
 
-    for _ in 0..1000 {
+    for _ in 0..200 {
         let x = rng.gen_range((-window.width() / 2.0)..(window.height() / 2.0));
         let y = rng.gen_range((-window.height() / 2.0)..(window.width() / 2.0));
         commands
@@ -62,6 +62,10 @@ fn setup(
 fn framerate(diagnostics: Res<Diagnostics>) {
     if let Some(fps) = diagnostics.get(bevy::diagnostic::FrameTimeDiagnosticsPlugin::FPS) {
         dbg!(fps.average());
+
+        web_sys::console::log_1(
+            &wasm_bindgen::JsValue::from_str(format!("{:?}", fps.average()).as_str())
+        )
     }
 }
 
