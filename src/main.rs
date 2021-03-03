@@ -10,7 +10,7 @@ use bevy::{
     window::WindowResized,
 };
 use rand::{Rng, prelude::ThreadRng};
-use web_sys::console;
+// use web_sys::console;
 
 fn main() {
     let mut app = App::build();
@@ -31,22 +31,22 @@ fn main() {
 struct Snow;
 struct Velocity(Vec2);
 
-pub struct Timer<'a> {
-    name: &'a str,
-}
+// pub struct Timer<'a> {
+//     name: &'a str,
+// }
 
-impl<'a> Timer<'a> {
-    pub fn new(name: &'a str) -> Timer<'a> {
-        console::time_with_label(name);
-        Timer { name }
-    }
-}
+// impl<'a> Timer<'a> {
+//     pub fn new(name: &'a str) -> Timer<'a> {
+//         console::time_with_label(name);
+//         Timer { name }
+//     }
+// }
 
-impl<'a> Drop for Timer<'a> {
-    fn drop(&mut self) {
-        console::time_end_with_label(self.name);
-    }
-}
+// impl<'a> Drop for Timer<'a> {
+//     fn drop(&mut self) {
+//         console::time_end_with_label(self.name);
+//     }
+// }
 
 fn setup(
     commands: &mut Commands,
@@ -95,7 +95,7 @@ fn randomish_velocity(rng: &mut ThreadRng) -> Vec2 {
 }
 
 fn snow_velocity(mut snow: Query<(&Snow, &mut Velocity)>) {
-    let _timer = Timer::new("snow_velocity");
+    // let _timer = Timer::new("snow_velocity");
 
     let mut rng = rand::thread_rng();
 
@@ -111,7 +111,7 @@ fn update_position(
     mut q: Query<(&mut Velocity, &mut Transform)>,
     windows: Res<Windows>,
 ) {
-    let _timer = Timer::new("update_position");
+    // let _timer = Timer::new("update_position");
 
     let window = windows.get_primary().unwrap();
     

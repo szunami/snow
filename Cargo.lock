@@ -2540,6 +2540,7 @@ dependencies = [
  "rand 0.8.3",
  "wasm-bindgen",
  "web-sys",
+ "winit",
 ]
 
 [[package]]
