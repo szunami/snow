@@ -9,7 +9,7 @@ use bevy::{
     tasks::{ComputeTaskPool, ParallelIterator},
     window::WindowResized,
 };
-use rand::{Rng, prelude::ThreadRng};
+use rand::{prelude::ThreadRng, Rng};
 // use web_sys::console;
 
 fn main() {
@@ -31,22 +31,7 @@ fn main() {
 struct Snow;
 struct Velocity(Vec2);
 
-// pub struct Timer<'a> {
-//     name: &'a str,
-// }
-
-// impl<'a> Timer<'a> {
-//     pub fn new(name: &'a str) -> Timer<'a> {
-//         console::time_with_label(name);
-//         Timer { name }
-//     }
-// }
-
-// impl<'a> Drop for Timer<'a> {
-//     fn drop(&mut self) {
-//         console::time_end_with_label(self.name);
-//     }
-// }
+struct Skier;
 
 fn setup(
     commands: &mut Commands,
@@ -78,6 +63,17 @@ fn setup(
             .with(Snow)
             .with(Velocity(randomish_velocity(&mut rng)));
     }
+
+    let skier_sprite = asset_server.load("textures/base.png");
+    let skier_atlas = TextureAtlas::from_grid(skier_sprite, Vec2::new(80.0, 80.0), 12, 1);
+
+    commands
+        .spawn(SpriteSheetBundle {
+            texture_atlas: texture_atlases.add(skier_atlas),
+            transform: Transform::default(),
+            ..Default::default()
+        })
+        .with(Skier);
 }
 
 fn framerate(diagnostics: Res<Diagnostics>) {
@@ -87,7 +83,6 @@ fn framerate(diagnostics: Res<Diagnostics>) {
 }
 
 fn randomish_velocity(rng: &mut ThreadRng) -> Vec2 {
-
     let x = rng.gen_range(-0.5..0.5);
     let y = rng.gen_range(-1.0..0.0);
 
@@ -98,7 +93,6 @@ fn snow_velocity(mut snow: Query<(&Snow, &mut Velocity)>) {
     // let _timer = Timer::new("snow_velocity");
 
     let mut rng = rand::thread_rng();
-
 
     for (_snow, mut velocity) in snow.iter_mut() {
         let new_velocity = randomish_velocity(&mut rng);
@@ -114,7 +108,7 @@ fn update_position(
     // let _timer = Timer::new("update_position");
 
     let window = windows.get_primary().unwrap();
-    
+
     let mut rng = rand::thread_rng();
 
     for (mut velocity, mut transform) in q.iter_mut() {
