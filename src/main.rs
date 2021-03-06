@@ -1,6 +1,7 @@
 use std::{
     default,
     fmt::{self, format},
+    time::Duration,
 };
 
 use bevy::{
@@ -20,7 +21,8 @@ fn main() {
         .add_system(framerate.system())
         // .add_system(bevy::input::system::exit_on_esc_system.system())
         .add_system(snow_velocity.system())
-        .add_system(update_position.system());
+        .add_system(update_position.system())
+        .add_system(animation.system());
 
     #[cfg(target_arch = "wasm32")]
     app.add_plugin(bevy_webgl2::WebGL2Plugin);
@@ -32,6 +34,24 @@ struct Snow;
 struct Velocity(Vec2);
 
 struct Skier;
+
+struct SkiLoop(u32, Timer);
+
+impl SkiLoop {
+    fn increment(&mut self, delta_t: f32) {
+        self.1.tick(delta_t);
+
+        if self.1.finished() {
+            self.0 = (self.0 + 1) % 12;
+        }
+    }
+}
+
+impl Default for SkiLoop {
+    fn default() -> Self {
+        SkiLoop(0, Timer::new(Duration::from_millis(100), true))
+    }
+}
 
 fn setup(
     commands: &mut Commands,
@@ -64,16 +84,17 @@ fn setup(
             .with(Velocity(randomish_velocity(&mut rng)));
     }
 
-    let skier_sprite = asset_server.load("textures/base.png");
+    let skier_sprite = asset_server.load("textures/skiing.png");
     let skier_atlas = TextureAtlas::from_grid(skier_sprite, Vec2::new(80.0, 80.0), 12, 1);
 
     commands
         .spawn(SpriteSheetBundle {
             texture_atlas: texture_atlases.add(skier_atlas),
-            transform: Transform::default(),
+            transform: Transform::from_scale(Vec3::new(2.0, 2.0, 2.0)),
             ..Default::default()
         })
-        .with(Skier);
+        .with(Skier)
+        .with(SkiLoop::default());
 }
 
 fn framerate(diagnostics: Res<Diagnostics>) {
@@ -130,5 +151,12 @@ fn update_position(
             transform.translation.x += window.width();
             *velocity = Velocity(randomish_velocity(&mut rng));
         }
+    }
+}
+
+fn animation(t: Res<Time>, mut q: Query<(&mut TextureAtlasSprite, &mut SkiLoop)>) {
+    for (mut sprite, mut ski_loop) in q.iter_mut() {
+        ski_loop.increment(t.delta_seconds());
+        sprite.index = ski_loop.0;
     }
 }
